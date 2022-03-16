@@ -1,2 +1,2 @@
-# Projet-Sonification
-## Sonification pour l’aide à la photographie
+# Projet-Sonification:
+### Sonification pour l’aide à la photographie
