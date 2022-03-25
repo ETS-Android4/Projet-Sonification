@@ -31,7 +31,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         sensorManager.registerListener(
                 this,
                 //sensorManager.getDefaultSensor(Sensor.TYPE_ORIENTATION), // version 1 deprecated
-                sensorManager.getDefaultSensor(Sensor.TYPE_GAME_ROTATION_VECTOR),
+                sensorManager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR),
                 SensorManager.SENSOR_DELAY_NORMAL);
     }
 
@@ -51,7 +51,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     }*/
 
     public void onSensorChanged(SensorEvent event) {
-        if (event.sensor == sensorManager.getDefaultSensor(Sensor.TYPE_GAME_ROTATION_VECTOR)) {
+        if (event.sensor == sensorManager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR)) {
             float[] rotationVector = event.values;
             float[] rotationMatrix = new float[9];
             SensorManager.getRotationMatrixFromVector(
@@ -62,8 +62,8 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             SensorManager.getOrientation(rotationMatrix, orientation);
 
             // Convert radians to degrees
-            long pitch = Math.round(Math.toDegrees(orientation[1]));
-            Log.d("TYPE_GAME_ROTATION_VECTOR",""+pitch);
+            long pitch = Math.abs(Math.round(Math.toDegrees(orientation[1])));
+            Log.d("Rotation téléphone",""+pitch);
         }
     }
 
