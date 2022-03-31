@@ -49,15 +49,14 @@ public class MainActivity extends AppCompatActivity {
         audioManager = (AudioManager) getSystemService(AUDIO_SERVICE);
 
         // Current volumn Index of particular stream type.
-        //float currentVolumeIndex = (float) audioManager.getStreamVolume(streamType);
+        float currentVolumeIndex = (float) audioManager.getStreamVolume(streamType);
 
         // Get the maximum volume index for a particular stream type.
-        //float maxVolumeIndex  = (float) audioManager.getStreamMaxVolume(streamType);
+        float maxVolumeIndex  = (float) audioManager.getStreamMaxVolume(streamType);
 
         // Volumn (0 --> 1)
-        //this.volume = currentVolumeIndex / maxVolumeIndex;
+        this.volume = currentVolumeIndex / maxVolumeIndex;
 
-        this.volume = Math.sin(10*rotation/(91.189*Math.PI));
 
         // Suggests an audio stream whose volume should be changed by
         // the hardware volume controls.
@@ -89,7 +88,7 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        // Load sound file (destroy.wav) into SoundPool.
+        // Load sound file into SoundPool.
         this.soundId = this.soundPool.load(this, R.raw.stringsound,1);
 
     }
@@ -101,7 +100,7 @@ public class MainActivity extends AppCompatActivity {
         if(loaded)  {
             float leftVolumn = volume;
             float rightVolumn = volume;
-            // Play sound of gunfire. Returns the ID of the new stream.
+            // Play sound. Returns the ID of the new stream.
             int streamId = this.soundPool.play(this.soundId,leftVolumn, rightVolumn, 1, 1, 1f);
         }
     }
