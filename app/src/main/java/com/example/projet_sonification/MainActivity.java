@@ -89,7 +89,7 @@ public class MainActivity extends AppCompatActivity {
         });
 
         // Load sound file into SoundPool.
-        this.soundId = this.soundPool.load(this, R.raw.stringsound,1);
+        this.soundId = this.soundPool.load(this, R.raw.bip_alerte_flou_image,1);
 
     }
 
@@ -101,7 +101,7 @@ public class MainActivity extends AppCompatActivity {
             float leftVolumn = volume;
             float rightVolumn = volume;
             // Play sound. Returns the ID of the new stream.
-            int streamId = this.soundPool.play(this.soundId,leftVolumn, rightVolumn, 1, 1, 1f);
+            int streamId = this.soundPool.play(this.soundId,leftVolumn, rightVolumn, 1, 0, 1f);
         }
     }
 
