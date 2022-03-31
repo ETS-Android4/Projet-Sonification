@@ -30,8 +30,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         sensorManager =  (SensorManager) getSystemService(SENSOR_SERVICE);
         sensorManager.registerListener(
                 this,
-                //sensorManager.getDefaultSensor(Sensor.TYPE_ORIENTATION), // version 1 deprecated
-                sensorManager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR),
+                sensorManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION),
                 SensorManager.SENSOR_DELAY_NORMAL);
     }
 
@@ -42,44 +41,21 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     }
 
     @SuppressLint("LongLogTag")
-    /*public void onSensorChanged(SensorEvent event) {
-        float orientation = (float) Math.toDegrees(event.values[2]);
-        Log.d("TYPE_ORIENTATION",""+orientation);
-
-        //float rotation = getRoll(event.values[3], event.values[0], event.values[1], event.values[2]);
-        //Log.d("TYPE_GAME_ROTATION_VECTOR",""+rotation);
-    }*/
 
     public void onSensorChanged(SensorEvent event) {
-        if (event.sensor == sensorManager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR)) {
-            float[] rotationVector = event.values;
-            float[] rotationMatrix = new float[9];
-            SensorManager.getRotationMatrixFromVector(
-                    rotationMatrix, rotationVector);
+        if (event.sensor == sensorManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION)) {
 
-            float[] orientation = new float[3];
+            float axeX = Math.round(event.values[0]);
+            float axeY = Math.round(event.values[1]);
+            float axeZ = Math.round(event.values[2]);
 
-            SensorManager.getOrientation(rotationMatrix, orientation);
-
-            // Convert radians to degrees
-            long pitch = Math.abs(Math.round(Math.toDegrees(orientation[1])));
-            Log.d("Rotation téléphone",""+pitch);
+            Log.d("vitesse Axe X",""+axeX);
+            Log.d("vitesse Axe Y",""+axeY);
+            Log.d("vitesse Axe Z",""+axeZ);
         }
     }
 
     public void onAccuracyChanged(Sensor sensor, int accuracy) {
 
-    }
-
-    /** Get the roll euler angle in radians, which is the rotation around the z axis.
-     * @return the rotation around the z axis in radians (between -PI and +PI) */
-    public float getRollRad (float w, float x, float y, float z) {
-        return (float) Math.atan2(2f * (w * z + y * x), 1f - 2f * (x * x + z * z));
-    }
-
-    /** Get the roll euler angle in degrees, which is the rotation around the z axis. Requires that this quaternion is normalized.
-     * @return the rotation around the z axis in degrees (between -180 and +180) */
-    public float getRoll (float w, float x, float y, float z) {
-        return Math.round((Math.toDegrees(getRollRad( w,  x, y, z)+Math.PI+Math.PI/2))%360);
     }
 }
