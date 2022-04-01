@@ -2,11 +2,16 @@ package com.example.sony_project;
 
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.graphics.ImageFormat;
 import android.graphics.SurfaceTexture;
 import android.hardware.Camera;
+import android.hardware.Sensor;
+import android.hardware.SensorEvent;
+import android.hardware.SensorEventListener;
+import android.hardware.SensorManager;
 import android.hardware.camera2.CameraAccessException;
 import android.hardware.camera2.CameraCaptureSession;
 import android.hardware.camera2.CameraCharacteristics;
@@ -46,7 +51,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 
-public class androidcam extends AppCompatActivity {
+public class androidcam extends AppCompatActivity implements SensorEventListener {
 
     private Button btnCapture;
     private TextureView textureView;
@@ -361,6 +366,59 @@ public class androidcam extends AppCompatActivity {
         //mBackgroundThread = new HandlerThread("Camera Background");
         mBackgroundHandler = new Handler(mBackgroundThread.getLooper());
     }
+
+
+
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        sensorManager =  (SensorManager) getSystemService(SENSOR_SERVICE);
+        sensorManager.registerListener(
+                this,
+                //sensorManager.getDefaultSensor(Sensor.TYPE_ORIENTATION), // version 1 deprecated
+                sensorManager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR),
+                SensorManager.SENSOR_DELAY_FASTEST);
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        sensorManager.unregisterListener(this);
+    }
+
+    @SuppressLint("LongLogTag")
+    /*public void onSensorChanged(SensorEvent event) {
+        float orientation = (float) Math.toDegrees(event.values[2]);
+        Log.d("TYPE_ORIENTATION",""+orientation);
+
+        //float rotation = getRoll(event.values[3], event.values[0], event.values[1], event.values[2]);
+        //Log.d("TYPE_GAME_ROTATION_VECTOR",""+rotation);
+    }*/
+
+    public void onSensorChanged(SensorEvent event) {
+        if (event.sensor == sensorManager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR)) {
+            float[] rotationVector = event.values;
+            float[] rotationMatrix = new float[9];
+            SensorManager.getRotationMatrixFromVector(
+                    rotationMatrix, rotationVector);
+
+            float[] orientation = new float[3];
+
+            SensorManager.getOrientation(rotationMatrix, orientation);
+
+            // Convert radians to degrees
+            long pitch = Math.abs(Math.round(Math.toDegrees(orientation[1])));
+            Log.d("Rotation téléphone",""+pitch);
+            this.volume = (float) Math.sin(10*pitch/(91.19*Math.PI));
+            soundPool.setVolume(streamId, this.volume, this.volume);
+        }
+    }
+
+    public void onAccuracyChanged(Sensor sensor, int accuracy) {
+
+    }
+
     /** Get the roll euler angle in radians, which is the rotation around the z axis.
      * @return the rotation around the z axis in radians (between -PI and +PI) */
     public float getRollRad (float w, float x, float y, float z) {
