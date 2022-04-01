@@ -15,7 +15,7 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 
-public class MainActivity extends AppCompatActivity implements SensorEventListener {
+public class soundAndroidCamActivity extends AppCompatActivity implements SensorEventListener {
     private SoundPool soundPool;
 
     private AudioManager audioManager;
@@ -41,7 +41,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+        setContentView(R.layout.sound_activity);
 
         this.button = (Button) this.findViewById(R.id.button);
 
