@@ -1,16 +1,21 @@
 package com.example.projet_sonification;
 
+import android.annotation.SuppressLint;
+import android.hardware.Sensor;
+import android.hardware.SensorEvent;
+import android.hardware.SensorEventListener;
+import android.hardware.SensorManager;
 import android.media.AudioAttributes;
 import android.media.AudioManager;
 import android.media.SoundPool;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 
-public class MainActivity extends AppCompatActivity {
-
+public class MainActivity extends AppCompatActivity implements SensorEventListener {
 
     private SoundPool soundPool;
 
@@ -34,16 +39,6 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
-        this.button = (Button) this.findViewById(R.id.button);
-
-        this.button.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                playSound();
-            }
-        });
-
 
         // AudioManager audio settings for adjusting the volume
         audioManager = (AudioManager) getSystemService(AUDIO_SERVICE);
@@ -104,5 +99,44 @@ public class MainActivity extends AppCompatActivity {
             int streamId = this.soundPool.play(this.soundId,leftVolumn, rightVolumn, 1, 0, 1f);
         }
     }
+
+    private SensorManager sensorManager;
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        sensorManager =  (SensorManager) getSystemService(SENSOR_SERVICE);
+        sensorManager.registerListener(
+                this,
+                sensorManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION),
+                SensorManager.SENSOR_DELAY_NORMAL);
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        sensorManager.unregisterListener(this);
+    }
+
+    @SuppressLint("LongLogTag")
+
+    public void onSensorChanged(SensorEvent event) {
+        if (event.sensor == sensorManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION)) {
+
+            float axeX = Math.round(event.values[0]);
+            float axeY = Math.round(event.values[1]);
+            float axeZ = Math.round(event.values[2]);
+
+            Log.d("vitesse Axe X",""+axeX);
+            Log.d("vitesse Axe Y",""+axeY);
+            Log.d("vitesse Axe Z",""+axeZ);
+            playSound();
+        }
+    }
+
+    public void onAccuracyChanged(Sensor sensor, int accuracy) {
+
+    }
+
 
 }
