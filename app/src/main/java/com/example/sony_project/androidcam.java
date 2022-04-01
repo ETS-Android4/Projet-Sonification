@@ -25,11 +25,13 @@ import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.util.Size;
 import android.util.SparseIntArray;
 import android.view.Surface;
 import android.view.TextureView;
 import android.view.View;
+import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.Toast;
 
@@ -145,8 +147,10 @@ public class androidcam extends AppCompatActivity {
 
         // Check orientation on Device
 
-        //int rotation = getWindowManager().getDefaultDisplay().getRotation();
-        //captureBuilder.set(CaptureRequest.JPEG_ORIENTATION,ORIENTATIONS.get(rotation));
+        int rotation = ((WindowManager) this.getSystemService(Context.WINDOW_SERVICE)).getDefaultDisplay().getOrientation();
+        rotation += characteristics.get(CameraCharacteristics.LENS_POSE_ROTATION);
+        Log.i("imageRotation",""+rotation);
+        captureBuilder.set(CaptureRequest.JPEG_ORIENTATION,ORIENTATIONS.get(rotation));
 
         try{
             file.createNewFile();
