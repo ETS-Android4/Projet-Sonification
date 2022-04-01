@@ -1,4 +1,4 @@
-package com.example.projet_sonification;
+package com.example.sony_project;
 
 import android.content.Context;
 import android.support.test.InstrumentationRegistry;
@@ -20,6 +20,6 @@ public class ExampleInstrumentedTest {
     public void useAppContext() {
         // Context of the app under test.
         Context appContext = InstrumentationRegistry.getInstrumentation().getTargetContext();
-        assertEquals("com.example.projet_sonification", appContext.getPackageName());
+        assertEquals("com.example.sony_project", appContext.getPackageName());
     }
 }

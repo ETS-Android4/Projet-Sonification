@@ -1,4 +1,4 @@
-package com.example.projet_sonification;
+package com.example.sony_project;
 
 import org.junit.Test;
 
