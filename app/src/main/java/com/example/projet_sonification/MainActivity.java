@@ -107,7 +107,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         sensorManager.registerListener(
                 this,
                 sensorManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION),
-                SensorManager.SENSOR_DELAY_NORMAL);
+                SensorManager.SENSOR_DELAY_FASTEST);
     }
 
     @Override
