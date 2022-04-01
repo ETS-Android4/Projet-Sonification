@@ -88,8 +88,6 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
     }
 
-
-
     // When users click on the button
     public void playSound( )  {
         if(loaded)  {
@@ -123,14 +121,16 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     public void onSensorChanged(SensorEvent event) {
         if (event.sensor == sensorManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION)) {
 
-            float axeX = Math.round(event.values[0]);
-            float axeY = Math.round(event.values[1]);
-            float axeZ = Math.round(event.values[2]);
+            float axeX = Math.abs(Math.round(event.values[0]));
+            float axeY = Math.abs(Math.round(event.values[1]));
+            float axeZ = Math.abs(Math.round(event.values[2]));
 
             Log.d("vitesse Axe X",""+axeX);
             Log.d("vitesse Axe Y",""+axeY);
             Log.d("vitesse Axe Z",""+axeZ);
-            playSound();
+            if(axeX>1 || axeY>1 || axeZ>1){
+                playSound();
+            }
         }
     }
 
