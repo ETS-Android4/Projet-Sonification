@@ -148,7 +148,7 @@ public class androidcam extends AppCompatActivity {
         // Check orientation on Device
 
         int rotation = ((WindowManager) this.getSystemService(Context.WINDOW_SERVICE)).getDefaultDisplay().getOrientation();
-        rotation += characteristics.get(CameraCharacteristics.LENS_POSE_ROTATION);
+
         Log.i("imageRotation",""+rotation);
         captureBuilder.set(CaptureRequest.JPEG_ORIENTATION,ORIENTATIONS.get(rotation));
 
@@ -361,7 +361,18 @@ public class androidcam extends AppCompatActivity {
         //mBackgroundThread = new HandlerThread("Camera Background");
         mBackgroundHandler = new Handler(mBackgroundThread.getLooper());
     }
+    /** Get the roll euler angle in radians, which is the rotation around the z axis.
+     * @return the rotation around the z axis in radians (between -PI and +PI) */
+    public float getRollRad (float w, float x, float y, float z) {
+        return (float) Math.atan2(2f * (w * z + y * x), 1f - 2f * (x * x + z * z));
     }
+
+    /** Get the roll euler angle in degrees, which is the rotation around the z axis. Requires that this quaternion is normalized.
+     * @return the rotation around the z axis in degrees (between -180 and +180) */
+    public float getRoll (float w, float x, float y, float z) {
+        return Math.round((Math.toDegrees(getRollRad( w,  x, y, z)+Math.PI+Math.PI/2))%360);
+    }
+}
 
 
 
