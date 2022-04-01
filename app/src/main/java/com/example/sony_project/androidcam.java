@@ -133,6 +133,8 @@ public class androidcam extends AppCompatActivity {
             height = jpegSizes[0].getHeight();
         }
 
+        file = new File(Environment.getExternalStorageDirectory()+"/Pictures/"+UUID.randomUUID()+".JPEG");
+
         ImageReader reader = ImageReader.newInstance(width,height,ImageFormat.JPEG,1);
         List<Surface> outputSurface = new ArrayList<>(2);
         outputSurface.add(reader.getSurface());
@@ -146,7 +148,7 @@ public class androidcam extends AppCompatActivity {
         //int rotation = getWindowManager().getDefaultDisplay().getRotation();
         //captureBuilder.set(CaptureRequest.JPEG_ORIENTATION,ORIENTATIONS.get(rotation));
 
-            try{
+        try{
             file.createNewFile();
         }
         catch(IOException e){
