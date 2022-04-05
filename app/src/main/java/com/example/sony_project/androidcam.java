@@ -98,10 +98,13 @@ public class androidcam extends AppCompatActivity implements SensorEventListener
 
     private float volume;
 
+    private float volumeAlert;
+
     private int streamId;
 
     private SensorManager sensorManager;
 
+    private SensorManager sensorManagerLinearAcc;
 
 
 
@@ -175,13 +178,13 @@ public class androidcam extends AppCompatActivity implements SensorEventListener
         audioManager = (AudioManager) getSystemService(AUDIO_SERVICE);
 
         // Current volumn Index of particular stream type.
-        //float currentVolumeIndex = (float) audioManager.getStreamVolume(streamType);
+        float currentVolumeIndex = (float) audioManager.getStreamVolume(streamType);
 
         // Get the maximum volume index for a particular stream type.
-        //float maxVolumeIndex  = (float) audioManager.getStreamMaxVolume(streamType);
+        float maxVolumeIndex  = (float) audioManager.getStreamMaxVolume(streamType);
 
         // Volumn (0 --> 1)
-        //this.volume = currentVolumeIndex / maxVolumeIndex;
+        this.volumeAlert = currentVolumeIndex / maxVolumeIndex;
 
         this.volume = 0;
 
@@ -217,7 +220,7 @@ public class androidcam extends AppCompatActivity implements SensorEventListener
 
         // Load sound file into SoundPool.
         this.soundId = this.soundPool.load(this, R.raw.stringsound,1);
-
+        this.soundId = this.soundPool.load(this, R.raw.bip_alerte_flou_image,1);
 
         //------------------------------------------------------------------
     }
@@ -236,101 +239,101 @@ public class androidcam extends AppCompatActivity implements SensorEventListener
             return;
         CameraManager manager = (CameraManager)getSystemService(Context.CAMERA_SERVICE);
         try{ CameraCharacteristics characteristics = manager.getCameraCharacteristics(cameraDevice.getId());
-                Size[] jpegSizes = null;
-                if(characteristics != null){
-            jpegSizes = characteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP)
-                    .getOutputSizes(ImageFormat.JPEG);
-        }
+            Size[] jpegSizes = null;
+            if(characteristics != null){
+                jpegSizes = characteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP)
+                        .getOutputSizes(ImageFormat.JPEG);
+            }
 
 
             // Capture image with custom size
 
-        int width = 640 ;
-        int height = 480 ;
-        if(jpegSizes != null && jpegSizes.length > 0 ) {
-            width = jpegSizes[0].getWidth();
-            height = jpegSizes[0].getHeight();
-        }
+            int width = 640 ;
+            int height = 480 ;
+            if(jpegSizes != null && jpegSizes.length > 0 ) {
+                width = jpegSizes[0].getWidth();
+                height = jpegSizes[0].getHeight();
+            }
 
-        file = new File(Environment.getExternalStorageDirectory()+"/Pictures/"+UUID.randomUUID()+".JPEG");
+            file = new File(Environment.getExternalStorageDirectory()+"/Pictures/"+UUID.randomUUID()+".JPEG");
 
-        ImageReader reader = ImageReader.newInstance(width,height,ImageFormat.JPEG,1);
-        List<Surface> outputSurface = new ArrayList<>(2);
-        outputSurface.add(reader.getSurface());
-        outputSurface.add(new Surface(textureView.getSurfaceTexture()));
-        CaptureRequest.Builder captureBuilder = cameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_STILL_CAPTURE);
-        captureBuilder.addTarget(reader.getSurface());
-        captureBuilder.set(CaptureRequest.CONTROL_MODE, CameraMetadata.CONTROL_MODE_AUTO);
+            ImageReader reader = ImageReader.newInstance(width,height,ImageFormat.JPEG,1);
+            List<Surface> outputSurface = new ArrayList<>(2);
+            outputSurface.add(reader.getSurface());
+            outputSurface.add(new Surface(textureView.getSurfaceTexture()));
+            CaptureRequest.Builder captureBuilder = cameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_STILL_CAPTURE);
+            captureBuilder.addTarget(reader.getSurface());
+            captureBuilder.set(CaptureRequest.CONTROL_MODE, CameraMetadata.CONTROL_MODE_AUTO);
 
-        try{
-            file.createNewFile();
-        }
-        catch(IOException e){
-            e.printStackTrace();
-        }
-        ImageReader.OnImageAvailableListener readerListener = new ImageReader.OnImageAvailableListener() {
-            @Override
-            public void onImageAvailable(ImageReader imageReader) {
-                Image image = null;
-                try{
+            try{
+                file.createNewFile();
+            }
+            catch(IOException e){
+                e.printStackTrace();
+            }
+            ImageReader.OnImageAvailableListener readerListener = new ImageReader.OnImageAvailableListener() {
+                @Override
+                public void onImageAvailable(ImageReader imageReader) {
+                    Image image = null;
+                    try{
                         image = reader.acquireLatestImage();
-                ByteBuffer buffer = image.getPlanes()[0].getBuffer();
-                byte[] bytes = new byte[buffer.capacity()];
-                buffer.get(bytes);
-                save(bytes);
-                }
-                catch (FileNotFoundException e )
-                {
-                    e.printStackTrace();
-                }
-                catch (IOException e )
-                {
-                    e.printStackTrace();
-                }
-                finally{
+                        ByteBuffer buffer = image.getPlanes()[0].getBuffer();
+                        byte[] bytes = new byte[buffer.capacity()];
+                        buffer.get(bytes);
+                        save(bytes);
+                    }
+                    catch (FileNotFoundException e )
                     {
-                      if(image != null)
-                          image.close();
+                        e.printStackTrace();
+                    }
+                    catch (IOException e )
+                    {
+                        e.printStackTrace();
+                    }
+                    finally{
+                        {
+                            if(image != null)
+                                image.close();
+                        }
                     }
                 }
-                }
-          private void save(byte[] bytes) throws IOException {
-              FileOutputStream outputStream = null;
-                try{
-                    outputStream = new FileOutputStream(file);
-                    outputStream.write(bytes);
-                }finally{
-                    if (outputStream != null)
-                        outputStream.close();
+                private void save(byte[] bytes) throws IOException {
+                    FileOutputStream outputStream = null;
+                    try{
+                        outputStream = new FileOutputStream(file);
+                        outputStream.write(bytes);
+                    }finally{
+                        if (outputStream != null)
+                            outputStream.close();
 
+                    }
                 }
-            }
             };
-        reader.setOnImageAvailableListener(readerListener,mBackgroundHandler);
-        CameraCaptureSession.CaptureCallback captureListener = new CameraCaptureSession.CaptureCallback() {
-            @Override
-            public void onCaptureCompleted(@NonNull CameraCaptureSession session, @NonNull CaptureRequest request, @NonNull TotalCaptureResult result) {
-                super.onCaptureCompleted(session, request, result);
-                Toast.makeText(androidcam.this, "saved"+file, Toast.LENGTH_SHORT).show();
-                createCameraPreview();
-            }
-        };
-
-        cameraDevice.createCaptureSession(outputSurface, new CameraCaptureSession.StateCallback() {
-            @Override
-            public void onConfigured(@NonNull CameraCaptureSession cameraCaptureSession) {
-                try{
-                    cameraCaptureSession.capture(captureBuilder.build(),captureListener,mBackgroundHandler);
-                } catch (CameraAccessException e ) {
-                    e.printStackTrace();
+            reader.setOnImageAvailableListener(readerListener,mBackgroundHandler);
+            CameraCaptureSession.CaptureCallback captureListener = new CameraCaptureSession.CaptureCallback() {
+                @Override
+                public void onCaptureCompleted(@NonNull CameraCaptureSession session, @NonNull CaptureRequest request, @NonNull TotalCaptureResult result) {
+                    super.onCaptureCompleted(session, request, result);
+                    Toast.makeText(androidcam.this, "saved"+file, Toast.LENGTH_SHORT).show();
+                    createCameraPreview();
                 }
-            }
+            };
 
-            @Override
-            public void onConfigureFailed(@NonNull CameraCaptureSession cameraCaptureSession) {
+            cameraDevice.createCaptureSession(outputSurface, new CameraCaptureSession.StateCallback() {
+                @Override
+                public void onConfigured(@NonNull CameraCaptureSession cameraCaptureSession) {
+                    try{
+                        cameraCaptureSession.capture(captureBuilder.build(),captureListener,mBackgroundHandler);
+                    } catch (CameraAccessException e ) {
+                        e.printStackTrace();
+                    }
+                }
 
-            }
-        },mBackgroundHandler);
+                @Override
+                public void onConfigureFailed(@NonNull CameraCaptureSession cameraCaptureSession) {
+
+                }
+            },mBackgroundHandler);
 
         } catch(CameraAccessException e ) {
             e.printStackTrace();
@@ -364,7 +367,7 @@ public class androidcam extends AppCompatActivity implements SensorEventListener
             e.printStackTrace();
         }
 
-        }
+    }
 
     private void UpdatePreview() {
         if (cameraDevice == null)
@@ -458,12 +461,20 @@ public class androidcam extends AppCompatActivity implements SensorEventListener
                 //sensorManager.getDefaultSensor(Sensor.TYPE_ORIENTATION), // version 1 deprecated
                 sensorManager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR),
                 SensorManager.SENSOR_DELAY_FASTEST);
-}
+
+
+        sensorManagerLinearAcc =  (SensorManager) getSystemService(SENSOR_SERVICE);
+        sensorManagerLinearAcc.registerListener(
+                this,
+                sensorManagerLinearAcc.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION),
+                SensorManager.SENSOR_DELAY_FASTEST);
+    }
     // Override
     protected void onPause(){
         stopBackgroundthread();
         super.onPause();
         sensorManager.unregisterListener(this);
+        sensorManagerLinearAcc.unregisterListener(this);
     }
 
     private void stopBackgroundthread() {
@@ -503,6 +514,15 @@ public class androidcam extends AppCompatActivity implements SensorEventListener
         }
     }
 
+    public void playSoundAlert( )  {
+        if(loaded)  {
+            float leftVolumn = volumeAlert;
+            float rightVolumn = volumeAlert;
+            // Play sound. Returns the ID of the new stream.
+            int streamId = this.soundPool.play(this.soundId,leftVolumn, rightVolumn, 1, 0, 1f);
+        }
+    }
+
 
     public void onSensorChanged(SensorEvent event) {
         if (event.sensor == sensorManager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR)) {
@@ -526,6 +546,19 @@ public class androidcam extends AppCompatActivity implements SensorEventListener
             //Log.d("Rotation téléphone",""+pitch);
             this.volume = (float) Math.sin(10*pitch/(91.19*Math.PI));
             soundPool.setVolume(streamId, this.volume, this.volume);
+        }
+        if (event.sensor == sensorManagerLinearAcc.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION)) {
+
+            float axeX = Math.abs(Math.round(event.values[0]));
+            float axeY = Math.abs(Math.round(event.values[1]));
+            float axeZ = Math.abs(Math.round(event.values[2]));
+
+            Log.d("vitesse Axe X",""+axeX);
+            Log.d("vitesse Axe Y",""+axeY);
+            Log.d("vitesse Axe Z",""+axeZ);
+            if(axeX>1 || axeY>1 || axeZ>1){
+                playSoundAlert();
+            }
         }
     }
 
