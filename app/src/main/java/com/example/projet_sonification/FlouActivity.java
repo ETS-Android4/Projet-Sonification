@@ -15,7 +15,10 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 
-public class MainActivity extends AppCompatActivity implements SensorEventListener {
+import com.example.sony_project.R;
+
+public class
+FlouActivity extends AppCompatActivity implements SensorEventListener {
 
     private SoundPool soundPool;
 
