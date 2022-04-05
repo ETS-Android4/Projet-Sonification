@@ -499,7 +499,7 @@ public class androidcam extends AppCompatActivity implements SensorEventListener
             float rightVolumn = volume;
             Log.d("play sound","----------------------------------------------------------");
             // Play sound. Returns the ID of the new stream.
-            streamId = this.soundPool.play(this.soundId,leftVolumn, rightVolumn, 1, 10, 1f);
+            streamId = this.soundPool.play(this.soundId,leftVolumn, rightVolumn, 1, -1, 1f);
         }
     }
 
