@@ -78,7 +78,7 @@ public class androidcam extends AppCompatActivity implements SensorEventListener
     }
 
 
-
+    private boolean isFirstTime = true;
 
     private SoundPool soundPool;
 
@@ -159,12 +159,13 @@ public class androidcam extends AppCompatActivity implements SensorEventListener
         textureView = (TextureView) findViewById(R.id.textureView);
         assert textureView != null ;
         textureView.setSurfaceTextureListener(textureListener);
+
         btnCapture = (Button) findViewById(R.id.btnCapture);
         btnCapture.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 takePicture();
-                playSound();
+
             }
         });
 
@@ -214,7 +215,7 @@ public class androidcam extends AppCompatActivity implements SensorEventListener
             }
         });
 
-        // Load sound file (destroy.wav) into SoundPool.
+        // Load sound file into SoundPool.
         this.soundId = this.soundPool.load(this, R.raw.stringsound,1);
 
 
@@ -382,6 +383,7 @@ public class androidcam extends AppCompatActivity implements SensorEventListener
     }
 
     private void openCamera() {
+
         CameraManager manager = (CameraManager) getSystemService(Context.CAMERA_SERVICE);
         try{
             cameraID = manager.getCameraIdList()[0];
@@ -399,6 +401,7 @@ public class androidcam extends AppCompatActivity implements SensorEventListener
                 return;
             }
             manager.openCamera(cameraID,stateCallBack, null);
+
         } catch (CameraAccessException cameraAccessException) {
             cameraAccessException.printStackTrace();
         }
@@ -441,6 +444,7 @@ public class androidcam extends AppCompatActivity implements SensorEventListener
     @Override
     protected void onResume() {
         super.onResume();
+
         startBackgroundthread();
         if(textureView.isAvailable())
             openCamera();
@@ -502,6 +506,12 @@ public class androidcam extends AppCompatActivity implements SensorEventListener
 
     public void onSensorChanged(SensorEvent event) {
         if (event.sensor == sensorManager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR)) {
+            if(isFirstTime && loaded){
+                playSound();
+                isFirstTime = false;
+            }
+
+
             float[] rotationVector = event.values;
             float[] rotationMatrix = new float[9];
             SensorManager.getRotationMatrixFromVector(
