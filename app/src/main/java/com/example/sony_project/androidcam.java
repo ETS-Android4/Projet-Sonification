@@ -1,13 +1,11 @@
 package com.example.sony_project;
 
 import android.Manifest;
-import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
 import android.graphics.ImageFormat;
 import android.graphics.SurfaceTexture;
-import android.hardware.Camera;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
@@ -26,7 +24,6 @@ import android.media.AudioManager;
 import android.media.Image;
 import android.media.ImageReader;
 import android.media.SoundPool;
-import android.os.Build;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.HandlerThread;
@@ -36,89 +33,48 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.util.Size;
-import android.util.SparseIntArray;
 import android.view.Surface;
 import android.view.TextureView;
-import android.view.View;
-import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.Toast;
-
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
-import android.hardware.Sensor;
-import android.hardware.SensorEvent;
-import android.hardware.SensorEventListener;
-import android.hardware.SensorManager;
-import android.media.AudioAttributes;
-import android.media.AudioManager;
-import android.media.SoundPool;
 
 
 public class androidcam extends AppCompatActivity implements SensorEventListener{
 
-    private Button btnCapture;
     private TextureView textureView;
 
-    // check the orientation of output image
-    private static final SparseIntArray ORIENTATIONS = new SparseIntArray();
-    static {
-        ORIENTATIONS.append(Surface.ROTATION_0,90);
-        ORIENTATIONS.append(Surface.ROTATION_90,0 );
-        ORIENTATIONS.append(Surface.ROTATION_180,270);
-        ORIENTATIONS.append(Surface.ROTATION_270,180);
-    }
-
-
-    private boolean isFirstTime = true;
-
     private SoundPool soundPool;
-
-    private AudioManager audioManager;
-    private Button button;
-
-
     // Maximumn sound stream.
     private static final int MAX_STREAMS = 5;
-
     // Stream type.
     private static final int streamType = AudioManager.STREAM_MUSIC;
-
     private boolean loaded;
-
-    private int soundId;
-
+    private boolean isFirstTime = true;
     private float volume;
-
+    private int soundId;
     private int streamId;
 
+    //Sensor
     private SensorManager sensorManager;
 
-
-
-
-
-
-    private String cameraID;
     private CameraDevice cameraDevice;
     private CameraCaptureSession cameraCaptureSessions;
     private CaptureRequest.Builder captureRequestBuilder;
     private Size imageDimension;
-    private ImageReader imageReader;
 
     // Save to file
 
     private File file;
     private static final int Request_Camera_Permission = 200 ;
-    private boolean mFlashSupported;
+    //private boolean mFlashSupported;
     private Handler mBackgroundHandler;
     private HandlerThread mBackgroundThread;
 
@@ -160,19 +116,13 @@ public class androidcam extends AppCompatActivity implements SensorEventListener
         assert textureView != null ;
         textureView.setSurfaceTextureListener(textureListener);
 
-        btnCapture = (Button) findViewById(R.id.btnCapture);
-        btnCapture.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                takePicture();
-
-            }
-        });
+        Button btnCapture = (Button) findViewById(R.id.btnCapture);
+        btnCapture.setOnClickListener(view -> takePicture());
 
         //------------------------------------------------------------------
 
         // AudioManager audio settings for adjusting the volume
-        audioManager = (AudioManager) getSystemService(AUDIO_SERVICE);
+        //AudioManager audioManager = (AudioManager) getSystemService(AUDIO_SERVICE);
 
         // Current volumn Index of particular stream type.
         //float currentVolumeIndex = (float) audioManager.getStreamVolume(streamType);
@@ -190,30 +140,18 @@ public class androidcam extends AppCompatActivity implements SensorEventListener
         this.setVolumeControlStream(streamType);
 
         // For Android SDK >= 21
-        if (Build.VERSION.SDK_INT >= 21 ) {
-            AudioAttributes audioAttrib = new AudioAttributes.Builder()
-                    .setUsage(AudioAttributes.USAGE_GAME)
-                    .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
-                    .build();
+        AudioAttributes audioAttrib = new AudioAttributes.Builder()
+                .setUsage(AudioAttributes.USAGE_GAME)
+                .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                .build();
 
-            SoundPool.Builder builder= new SoundPool.Builder();
-            builder.setAudioAttributes(audioAttrib).setMaxStreams(MAX_STREAMS);
+        SoundPool.Builder builder= new SoundPool.Builder();
+        builder.setAudioAttributes(audioAttrib).setMaxStreams(MAX_STREAMS);
 
-            this.soundPool = builder.build();
-        }
-        // for Android SDK < 21
-        else {
-            // SoundPool(int maxStreams, int streamType, int srcQuality)
-            this.soundPool = new SoundPool(MAX_STREAMS, AudioManager.STREAM_MUSIC, 0);
-        }
+        this.soundPool = builder.build();
 
         // When Sound Pool load complete.
-        this.soundPool.setOnLoadCompleteListener(new SoundPool.OnLoadCompleteListener() {
-            @Override
-            public void onLoadComplete(SoundPool soundPool, int sampleId, int status) {
-                loaded = true;
-            }
-        });
+        this.soundPool.setOnLoadCompleteListener((soundPool, sampleId, status) -> loaded = true);
 
         // Load sound file into SoundPool.
         this.soundId = this.soundPool.load(this, R.raw.stringsound,1);
@@ -278,16 +216,10 @@ public class androidcam extends AppCompatActivity implements SensorEventListener
                 byte[] bytes = new byte[buffer.capacity()];
                 buffer.get(bytes);
                 save(bytes);
-                }
-                catch (FileNotFoundException e )
+                } catch (IOException e )
                 {
                     e.printStackTrace();
-                }
-                catch (IOException e )
-                {
-                    e.printStackTrace();
-                }
-                finally{
+                } finally{
                     {
                       if(image != null)
                           image.close();
@@ -295,15 +227,9 @@ public class androidcam extends AppCompatActivity implements SensorEventListener
                 }
                 }
           private void save(byte[] bytes) throws IOException {
-              FileOutputStream outputStream = null;
-                try{
-                    outputStream = new FileOutputStream(file);
-                    outputStream.write(bytes);
-                }finally{
-                    if (outputStream != null)
-                        outputStream.close();
-
-                }
+              try (FileOutputStream outputStream = new FileOutputStream(file)) {
+                  outputStream.write(bytes);
+              }
             }
             };
         reader.setOnImageAvailableListener(readerListener,mBackgroundHandler);
@@ -345,7 +271,7 @@ public class androidcam extends AppCompatActivity implements SensorEventListener
             Surface surface = new Surface(texture);
             captureRequestBuilder = cameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW);
             captureRequestBuilder.addTarget(surface);
-            cameraDevice.createCaptureSession(Arrays.asList(surface), new CameraCaptureSession.StateCallback() {
+            cameraDevice.createCaptureSession(Collections.singletonList(surface), new CameraCaptureSession.StateCallback() {
                 @Override
                 public void onConfigured(@NonNull CameraCaptureSession cameraCaptureSession) {
                     if (cameraDevice == null)
@@ -379,14 +305,11 @@ public class androidcam extends AppCompatActivity implements SensorEventListener
     }
 
 
-    private void save(byte[] bytes) {
-    }
-
     private void openCamera() {
 
         CameraManager manager = (CameraManager) getSystemService(Context.CAMERA_SERVICE);
         try{
-            cameraID = manager.getCameraIdList()[0];
+            String cameraID = manager.getCameraIdList()[0];
             CameraCharacteristics characteristics = manager.getCameraCharacteristics(cameraID);
             StreamConfigurationMap map = characteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP);
             assert map != null;
@@ -531,18 +454,6 @@ public class androidcam extends AppCompatActivity implements SensorEventListener
 
     public void onAccuracyChanged(Sensor sensor, int accuracy) {
 
-    }
-
-    /** Get the roll euler angle in radians, which is the rotation around the z axis.
-     * @return the rotation around the z axis in radians (between -PI and +PI) */
-    public float getRollRad (float w, float x, float y, float z) {
-        return (float) Math.atan2(2f * (w * z + y * x), 1f - 2f * (x * x + z * z));
-    }
-
-    /** Get the roll euler angle in degrees, which is the rotation around the z axis. Requires that this quaternion is normalized.
-     * @return the rotation around the z axis in degrees (between -180 and +180) */
-    public float getRoll (float w, float x, float y, float z) {
-        return Math.round((Math.toDegrees(getRollRad( w,  x, y, z)+Math.PI+Math.PI/2))%360);
     }
 
 }
