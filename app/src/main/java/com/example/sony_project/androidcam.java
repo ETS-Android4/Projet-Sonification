@@ -462,6 +462,9 @@ public class androidcam extends AppCompatActivity implements SensorEventListener
 
             // Convert radians to degrees
             long pitch = Math.abs(Math.round(Math.toDegrees(orientation[1])));
+            Log.d("Orientation 1",""+Math.abs(Math.round(Math.toDegrees(orientation[0]))));
+            Log.d("Orientation 2",""+Math.abs(Math.round(Math.toDegrees(orientation[1]))));
+            Log.d("Orientation 3",""+Math.abs(Math.round(Math.toDegrees(orientation[2]))));
             //Log.d("Rotation téléphone",""+pitch);
             this.volume = (float) Math.sin(10*pitch/(91.19*Math.PI));
             soundPool.setVolume(streamId, this.volume, this.volume);
