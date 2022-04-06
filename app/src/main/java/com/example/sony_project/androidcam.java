@@ -57,7 +57,7 @@ public class androidcam extends AppCompatActivity implements SensorEventListener
     // Stream type.
     private static final int streamType = AudioManager.STREAM_MUSIC;
     private boolean loaded;
-    private boolean isFirstTime = true;
+    private boolean isFirstTime;
     private float volume;
     private int soundId;
     private int streamId;
@@ -382,11 +382,14 @@ public class androidcam extends AppCompatActivity implements SensorEventListener
                 sensorManager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR),
                 SensorManager.SENSOR_DELAY_FASTEST);
 }
-    // Override
+    @Override
     protected void onPause(){
         stopBackgroundthread();
-        super.onPause();
         sensorManager.unregisterListener(this);
+        this.soundPool.pause(this.soundId);
+        super.onPause();
+
+
     }
 
     private void stopBackgroundthread() {
@@ -407,10 +410,23 @@ public class androidcam extends AppCompatActivity implements SensorEventListener
         mBackgroundHandler = new Handler(mBackgroundThread.getLooper());
     }
 
+    @Override
+    protected void onStart() {
+        super.onStart();
+        this.isFirstTime = true;
+    }
 
+    @Override
+    protected void onStop() {
+        this.soundPool.stop(this.soundId);
+        super.onStop();
+    }
 
-
-
+    @Override
+    protected void onDestroy() {
+        this.soundPool.stop(this.soundId);
+        super.onDestroy();
+    }
 
 
 
