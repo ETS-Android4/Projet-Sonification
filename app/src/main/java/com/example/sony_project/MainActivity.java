@@ -20,14 +20,6 @@ private ImageView play;
 
         this.play = (ImageView) findViewById(R.id.play);
 
-        if(Build.VERSION.SDK_INT >= 30){
-            if (!Environment.isExternalStorageManager()) {
-                Intent getPermission = new Intent();
-                getPermission.setAction(Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION);
-                startActivity(getPermission);
-            }
-        }
-
         play.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {

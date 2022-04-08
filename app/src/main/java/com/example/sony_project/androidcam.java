@@ -52,7 +52,7 @@ public class androidcam extends AppCompatActivity implements SensorEventListener
     private TextureView textureView;
 
     private SoundPool soundPool;
-    // Maximumn sound stream.
+    // Maximum sound stream.
     private static final int MAX_STREAMS = 5;
     // Stream type.
     private static final int streamType = AudioManager.STREAM_MUSIC;
@@ -124,13 +124,13 @@ public class androidcam extends AppCompatActivity implements SensorEventListener
         // AudioManager audio settings for adjusting the volume
         //AudioManager audioManager = (AudioManager) getSystemService(AUDIO_SERVICE);
 
-        // Current volumn Index of particular stream type.
+        // Current volume Index of particular stream type.
         //float currentVolumeIndex = (float) audioManager.getStreamVolume(streamType);
 
         // Get the maximum volume index for a particular stream type.
         //float maxVolumeIndex  = (float) audioManager.getStreamMaxVolume(streamType);
 
-        // Volumn (0 --> 1)
+        // Volume (0 --> 1)
         //this.volume = currentVolumeIndex / maxVolumeIndex;
 
         this.volume = 0;
@@ -311,7 +311,13 @@ public class androidcam extends AppCompatActivity implements SensorEventListener
         try{
             String cameraID = manager.getCameraIdList()[0];
             CameraCharacteristics characteristics = manager.getCameraCharacteristics(cameraID);
-            StreamConfigurationMap map = characteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP);
+            StreamConfigurationMap map = null;
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
+                map = characteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP_MAXIMUM_RESOLUTION);
+            }
+            else {
+                map = characteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP);
+            }
             assert map != null;
             imageDimension = map.getOutputSizes(SurfaceTexture.class)[0];
             // Check SelfPermission
@@ -434,11 +440,11 @@ public class androidcam extends AppCompatActivity implements SensorEventListener
     // When users click on the button
     public void playSound()  {
         if(loaded)  {
-            float leftVolumn = volume;
-            float rightVolumn = volume;
+            float leftVolume = volume;
+            float rightVolume = volume;
             Log.d("play sound","----------------------------------------------------------");
             // Play sound. Returns the ID of the new stream.
-            streamId = this.soundPool.play(this.soundId,leftVolumn, rightVolumn, 1, -1, 1f);
+            streamId = this.soundPool.play(this.soundId,leftVolume, rightVolume, 1, -1, 1f);
         }
     }
 
@@ -449,24 +455,26 @@ public class androidcam extends AppCompatActivity implements SensorEventListener
                 playSound();
                 isFirstTime = false;
             }
+            // Get rotation matrix
+            float[] rotationMatrix = new float[16];
+            SensorManager.getRotationMatrixFromVector(rotationMatrix, event.values);
 
+            // Remap coordinate system
+            float[] remappedRotationMatrix = new float[16];
+            SensorManager.remapCoordinateSystem(rotationMatrix, SensorManager.AXIS_X, SensorManager.AXIS_Z,
+                    remappedRotationMatrix);
 
-            float[] rotationVector = event.values;
-            float[] rotationMatrix = new float[9];
-            SensorManager.getRotationMatrixFromVector(
-                    rotationMatrix, rotationVector);
-
+            // Convert to orientations
             float[] orientation = new float[3];
-
-            SensorManager.getOrientation(rotationMatrix, orientation);
+            SensorManager.getOrientation(remappedRotationMatrix, orientation);
 
             // Convert radians to degrees
-            long pitch = Math.abs(Math.round(Math.toDegrees(orientation[1])));
+            float pitch = Math.abs(orientation[2])*2;
             Log.d("Orientation 1",""+Math.abs(Math.round(Math.toDegrees(orientation[0]))));
-            Log.d("Orientation 2",""+Math.abs(Math.round(Math.toDegrees(orientation[1]))));
-            Log.d("Orientation 3",""+Math.abs(Math.round(Math.toDegrees(orientation[2]))));
+            Log.d("Orientation 2",""+ pitch);
+            Log.d("Orientation 3",""+Math.abs(Math.round(Math.toDegrees(orientation[1]))));
             //Log.d("Rotation téléphone",""+pitch);
-            this.volume = (float) Math.sin(10*pitch/(91.19*Math.PI));
+            this.volume = (float) Math.sin(pitch);
             soundPool.setVolume(streamId, this.volume, this.volume);
         }
     }
