@@ -390,9 +390,9 @@ public class androidcam extends AppCompatActivity implements SensorEventListener
     @Override
     protected void onPause(){
         stopBackgroundthread();
-        cameraDevice.close();
         sensorManager.unregisterListener(this);
         this.soundPool.pause(this.soundId);
+        cameraDevice.close();
         super.onPause();
 
 
@@ -468,12 +468,7 @@ public class androidcam extends AppCompatActivity implements SensorEventListener
             float[] orientation = new float[3];
             SensorManager.getOrientation(remappedRotationMatrix, orientation);
 
-            // Convert radians to degrees
             float pitch = Math.abs(orientation[2])*2;
-            Log.d("Orientation 1",""+Math.abs(Math.round(Math.toDegrees(orientation[0]))));
-            Log.d("Orientation 2",""+ pitch);
-            Log.d("Orientation 3",""+Math.abs(Math.round(Math.toDegrees(orientation[1]))));
-            //Log.d("Rotation téléphone",""+pitch);
             this.volume = (float) Math.sin(pitch);
             soundPool.setVolume(streamId, this.volume, this.volume);
         }
