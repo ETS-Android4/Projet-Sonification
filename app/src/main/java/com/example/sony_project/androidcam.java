@@ -59,8 +59,11 @@ public class androidcam extends AppCompatActivity implements SensorEventListener
     private boolean loaded;
     private boolean isFirstTime;
     private float volume;
+    private float volumeAlert;
     private int soundId;
+    private int soundIdAlert;
     private int streamId;
+    private int streamIdAlert;
 
     //Sensor
     private SensorManager sensorManager;
@@ -112,26 +115,26 @@ public class androidcam extends AppCompatActivity implements SensorEventListener
         setContentView(R.layout.activity_androidcam);
 
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
-        textureView = (TextureView) findViewById(R.id.textureView);
+        textureView = findViewById(R.id.textureView);
         assert textureView != null ;
         textureView.setSurfaceTextureListener(textureListener);
 
-        Button btnCapture = (Button) findViewById(R.id.btnCapture);
+        Button btnCapture = findViewById(R.id.btnCapture);
         btnCapture.setOnClickListener(view -> takePicture());
 
         //------------------------------------------------------------------
 
         // AudioManager audio settings for adjusting the volume
-        //AudioManager audioManager = (AudioManager) getSystemService(AUDIO_SERVICE);
+        AudioManager audioManager = (AudioManager) getSystemService(AUDIO_SERVICE);
 
         // Current volume Index of particular stream type.
-        //float currentVolumeIndex = (float) audioManager.getStreamVolume(streamType);
+        float currentVolumeIndex = (float) audioManager.getStreamVolume(streamType);
 
         // Get the maximum volume index for a particular stream type.
-        //float maxVolumeIndex  = (float) audioManager.getStreamMaxVolume(streamType);
+        float maxVolumeIndex  = (float) audioManager.getStreamMaxVolume(streamType);
 
         // Volume (0 --> 1)
-        //this.volume = currentVolumeIndex / maxVolumeIndex;
+        this.volumeAlert = currentVolumeIndex / maxVolumeIndex;
 
         this.volume = 0;
 
@@ -139,14 +142,13 @@ public class androidcam extends AppCompatActivity implements SensorEventListener
         // the hardware volume controls.
         this.setVolumeControlStream(streamType);
 
-        // For Android SDK >= 21
         AudioAttributes audioAttrib = new AudioAttributes.Builder()
-                .setUsage(AudioAttributes.USAGE_GAME)
+                .setUsage(AudioAttributes.USAGE_ASSISTANCE_ACCESSIBILITY)
                 .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
                 .build();
 
         SoundPool.Builder builder= new SoundPool.Builder();
-        builder.setAudioAttributes(audioAttrib).setMaxStreams(MAX_STREAMS);
+        builder.setAudioAttributes(audioAttrib).setMaxStreams(2);
 
         this.soundPool = builder.build();
 
@@ -155,7 +157,7 @@ public class androidcam extends AppCompatActivity implements SensorEventListener
 
         // Load sound file into SoundPool.
         this.soundId = this.soundPool.load(this, R.raw.stringsound,1);
-
+        this.soundIdAlert = this.soundPool.load(this, R.raw.bip_alerte_flou_image,1);
 
         //------------------------------------------------------------------
     }
@@ -311,7 +313,7 @@ public class androidcam extends AppCompatActivity implements SensorEventListener
         try{
             String cameraID = manager.getCameraIdList()[0];
             CameraCharacteristics characteristics = manager.getCameraCharacteristics(cameraID);
-            StreamConfigurationMap map = null;
+            StreamConfigurationMap map;
             if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
                 map = characteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP_MAXIMUM_RESOLUTION);
             }
@@ -386,6 +388,10 @@ public class androidcam extends AppCompatActivity implements SensorEventListener
                 this,
                 sensorManager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR),
                 SensorManager.SENSOR_DELAY_FASTEST);
+        sensorManager.registerListener(
+                this,
+                sensorManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION),
+                SensorManager.SENSOR_DELAY_FASTEST);
 }
     @Override
     protected void onPause(){
@@ -431,6 +437,8 @@ public class androidcam extends AppCompatActivity implements SensorEventListener
     @Override
     protected void onDestroy() {
         this.soundPool.stop(this.soundId);
+        this.soundPool.unload(this.soundId);
+        this.soundPool.unload(this.soundIdAlert);
         super.onDestroy();
     }
 
@@ -445,6 +453,15 @@ public class androidcam extends AppCompatActivity implements SensorEventListener
             Log.d("play sound","----------------------------------------------------------");
             // Play sound. Returns the ID of the new stream.
             streamId = this.soundPool.play(this.soundId,leftVolume, rightVolume, 1, -1, 1f);
+        }
+    }
+
+    public void playSoundAlert( )  {
+        if(loaded)  {
+            float leftVolume = volumeAlert;
+            float rightVolume = volumeAlert;
+            // Play sound. Returns the ID of the new stream.
+            streamIdAlert = this.soundPool.play(this.soundIdAlert,leftVolume, rightVolume, 0, 0, 1f);
         }
     }
 
@@ -471,6 +488,19 @@ public class androidcam extends AppCompatActivity implements SensorEventListener
             float pitch = Math.abs(orientation[2])*2;
             this.volume = (float) Math.sin(pitch);
             soundPool.setVolume(streamId, this.volume, this.volume);
+        }
+        if (event.sensor == sensorManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION) && !(event.sensor == sensorManager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR))) {
+
+            float axeX = Math.abs(Math.round(event.values[0]));
+            float axeY = Math.abs(Math.round(event.values[1]));
+            float axeZ = Math.abs(Math.round(event.values[2]));
+
+            Log.d("vitesse Axe X",""+axeX);
+            Log.d("vitesse Axe Y",""+axeY);
+            Log.d("vitesse Axe Z",""+axeZ);
+            if(axeX>1 || axeY>1 || axeZ>1){
+                playSoundAlert();
+            }
         }
     }
 
