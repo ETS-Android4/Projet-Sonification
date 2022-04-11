@@ -96,15 +96,18 @@ public class androidcam extends AppCompatActivity implements SensorEventListener
 
     private int soundId;
 
+    private int soundId1;
+
     private float volume;
 
     private float volumeAlert;
 
     private int streamId;
 
+    private int streamId1;
+
     private SensorManager sensorManager;
 
-    private SensorManager sensorManagerLinearAcc;
 
 
 
@@ -220,7 +223,7 @@ public class androidcam extends AppCompatActivity implements SensorEventListener
 
         // Load sound file into SoundPool.
         this.soundId = this.soundPool.load(this, R.raw.stringsound,1);
-        this.soundId = this.soundPool.load(this, R.raw.bip_alerte_flou_image,1);
+        this.soundId1 = this.soundPool.load(this, R.raw.bip_alerte_flou_image,1);
 
         //------------------------------------------------------------------
     }
@@ -458,23 +461,20 @@ public class androidcam extends AppCompatActivity implements SensorEventListener
         sensorManager =  (SensorManager) getSystemService(SENSOR_SERVICE);
         sensorManager.registerListener(
                 this,
-                //sensorManager.getDefaultSensor(Sensor.TYPE_ORIENTATION), // version 1 deprecated
+                sensorManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION),
+                SensorManager.SENSOR_DELAY_FASTEST);
+        sensorManager.registerListener(
+                this,
                 sensorManager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR),
                 SensorManager.SENSOR_DELAY_FASTEST);
 
 
-        sensorManagerLinearAcc =  (SensorManager) getSystemService(SENSOR_SERVICE);
-        sensorManagerLinearAcc.registerListener(
-                this,
-                sensorManagerLinearAcc.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION),
-                SensorManager.SENSOR_DELAY_FASTEST);
     }
     // Override
     protected void onPause(){
         stopBackgroundthread();
         super.onPause();
         sensorManager.unregisterListener(this);
-        sensorManagerLinearAcc.unregisterListener(this);
     }
 
     private void stopBackgroundthread() {
@@ -519,7 +519,7 @@ public class androidcam extends AppCompatActivity implements SensorEventListener
             float leftVolumn = volumeAlert;
             float rightVolumn = volumeAlert;
             // Play sound. Returns the ID of the new stream.
-            int streamId = this.soundPool.play(this.soundId,leftVolumn, rightVolumn, 1, 0, 1f);
+            streamId1 = this.soundPool.play(this.soundId1,leftVolumn, rightVolumn, 1, 0, 1f);
         }
     }
 
@@ -547,7 +547,7 @@ public class androidcam extends AppCompatActivity implements SensorEventListener
             this.volume = (float) Math.sin(10*pitch/(91.19*Math.PI));
             soundPool.setVolume(streamId, this.volume, this.volume);
         }
-        if (event.sensor == sensorManagerLinearAcc.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION)) {
+        if (event.sensor == sensorManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION) && !(event.sensor == sensorManager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR))) {
 
             float axeX = Math.abs(Math.round(event.values[0]));
             float axeY = Math.abs(Math.round(event.values[1]));
