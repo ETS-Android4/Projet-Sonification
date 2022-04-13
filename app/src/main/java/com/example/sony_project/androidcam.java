@@ -53,7 +53,7 @@ public class androidcam extends AppCompatActivity implements SensorEventListener
 
     private SoundPool soundPool;
     // Maximum sound stream.
-    private static final int MAX_STREAMS = 5;
+    private static final int MAX_STREAMS = 2;
     // Stream type.
     private static final int streamType = AudioManager.STREAM_MUSIC;
     private boolean loaded;
@@ -62,8 +62,8 @@ public class androidcam extends AppCompatActivity implements SensorEventListener
     private float volumeAlert;
     private int soundId;
     private int soundIdAlert;
-    private int streamId;
-    private int streamIdAlert;
+    private int streamId = -1;
+    private int streamIdAlert = -1;
 
     //Sensor
     private SensorManager sensorManager;
@@ -148,7 +148,7 @@ public class androidcam extends AppCompatActivity implements SensorEventListener
                 .build();
 
         SoundPool.Builder builder= new SoundPool.Builder();
-        builder.setAudioAttributes(audioAttrib).setMaxStreams(2);
+        builder.setAudioAttributes(audioAttrib).setMaxStreams(MAX_STREAMS);
 
         this.soundPool = builder.build();
 
@@ -156,6 +156,7 @@ public class androidcam extends AppCompatActivity implements SensorEventListener
         this.soundPool.setOnLoadCompleteListener((soundPool, sampleId, status) -> loaded = true);
 
         // Load sound file into SoundPool.
+
         this.soundId = this.soundPool.load(this, R.raw.stringsound,1);
         this.soundIdAlert = this.soundPool.load(this, R.raw.bip_alerte_flou_image,1);
 
@@ -439,6 +440,10 @@ public class androidcam extends AppCompatActivity implements SensorEventListener
         this.soundPool.stop(this.soundId);
         this.soundPool.unload(this.soundId);
         this.soundPool.unload(this.soundIdAlert);
+        if(soundPool != null) {
+            soundPool.release();
+            soundPool = null;
+        }
         super.onDestroy();
     }
 
@@ -452,7 +457,10 @@ public class androidcam extends AppCompatActivity implements SensorEventListener
             float rightVolume = volume;
             Log.d("play sound","----------------------------------------------------------");
             // Play sound. Returns the ID of the new stream.
-            streamId = this.soundPool.play(this.soundId,leftVolume, rightVolume, 1, -1, 1f);
+
+            do {
+                streamId = this.soundPool.play(this.soundId,leftVolume, rightVolume, 1, -1, 1f);
+            } while(streamId==0);
         }
     }
 
@@ -460,6 +468,7 @@ public class androidcam extends AppCompatActivity implements SensorEventListener
         if(loaded)  {
             float leftVolume = volumeAlert;
             float rightVolume = volumeAlert;
+            Log.d("play sound","----------------------------------------------------------");
             // Play sound. Returns the ID of the new stream.
             streamIdAlert = this.soundPool.play(this.soundIdAlert,leftVolume, rightVolume, 0, 0, 1f);
         }
