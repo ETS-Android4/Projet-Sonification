@@ -495,7 +495,9 @@ public class androidcam extends AppCompatActivity implements SensorEventListener
             SensorManager.getOrientation(remappedRotationMatrix, orientation);
 
             float pitch = Math.abs(orientation[2])*2;
-            this.volume = (float) Math.sin(pitch);
+
+            this.volume = (float) Math.abs(Math.sin(pitch));
+            Log.d("orientation",""+this.volume);
             soundPool.setVolume(streamId, this.volume, this.volume);
         }
         if (event.sensor == sensorManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION) && !(event.sensor == sensorManager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR))) {
