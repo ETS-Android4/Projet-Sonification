@@ -476,6 +476,22 @@ public class androidcam extends AppCompatActivity implements SensorEventListener
 
 
     public void onSensorChanged(SensorEvent event) {
+        float axeX = 0;
+        float axeY = 0;
+        float axeZ = 0;
+        if (event.sensor == sensorManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION)) {
+
+            axeX = Math.abs(Math.round(event.values[0]));
+            axeY = Math.abs(Math.round(event.values[1]));
+            axeZ = Math.abs(Math.round(event.values[2]));
+
+            Log.d("vitesse Axe X",""+axeX);
+            Log.d("vitesse Axe Y",""+axeY);
+            Log.d("vitesse Axe Z",""+axeZ);
+            if(axeX>1 || axeY>1 || axeZ>1){
+                playSoundAlert();
+            }
+        }
         if (event.sensor == sensorManager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR)) {
             if(isFirstTime && loaded){
                 playSound();
@@ -487,7 +503,7 @@ public class androidcam extends AppCompatActivity implements SensorEventListener
 
             // Remap coordinate system
             float[] remappedRotationMatrix = new float[16];
-            SensorManager.remapCoordinateSystem(rotationMatrix, SensorManager.AXIS_X, SensorManager.AXIS_Z,
+            SensorManager.remapCoordinateSystem(rotationMatrix, SensorManager.AXIS_X-(int) axeX, SensorManager.AXIS_Z-(int) axeZ,
                     remappedRotationMatrix);
 
             // Convert to orientations
@@ -495,24 +511,14 @@ public class androidcam extends AppCompatActivity implements SensorEventListener
             SensorManager.getOrientation(remappedRotationMatrix, orientation);
 
             float pitch = Math.abs(orientation[2])*2;
+            if(axeX==0 && axeY==0 && axeZ==0){
+                this.volume = (float) Math.abs(Math.sin(pitch));
+            }
 
-            this.volume = (float) Math.abs(Math.sin(pitch));
             Log.d("orientation",""+this.volume);
             soundPool.setVolume(streamId, this.volume, this.volume);
         }
-        if (event.sensor == sensorManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION) && !(event.sensor == sensorManager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR))) {
 
-            float axeX = Math.abs(Math.round(event.values[0]));
-            float axeY = Math.abs(Math.round(event.values[1]));
-            float axeZ = Math.abs(Math.round(event.values[2]));
-
-            Log.d("vitesse Axe X",""+axeX);
-            Log.d("vitesse Axe Y",""+axeY);
-            Log.d("vitesse Axe Z",""+axeZ);
-            if(axeX>1 || axeY>1 || axeZ>1){
-                playSoundAlert();
-            }
-        }
     }
 
     public void onAccuracyChanged(Sensor sensor, int accuracy) {
