@@ -188,9 +188,15 @@ public class androidcam extends AppCompatActivity implements SensorEventListener
 
         int width = 640 ;
         int height = 480 ;
+
         if(jpegSizes != null && jpegSizes.length > 0 ) {
             width = jpegSizes[0].getWidth();
             height = jpegSizes[0].getHeight();
+            for (Size j : jpegSizes) {
+                Log.d("size",""+j);
+                width = j.getWidth();
+                height = j.getHeight();
+            }
         }
 
         file = new File(Environment.getExternalStorageDirectory()+"/Pictures/"+UUID.randomUUID()+".JPEG");
@@ -479,7 +485,7 @@ public class androidcam extends AppCompatActivity implements SensorEventListener
         float axeX = 0;
         float axeY = 0;
         float axeZ = 0;
-        if (event.sensor == sensorManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION)) {
+        if (event.sensor == sensorManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION) && !(event.sensor == sensorManager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR))) {
 
             axeX = Math.abs(Math.round(event.values[0]));
             axeY = Math.abs(Math.round(event.values[1]));
@@ -488,11 +494,11 @@ public class androidcam extends AppCompatActivity implements SensorEventListener
             Log.d("vitesse Axe X",""+axeX);
             Log.d("vitesse Axe Y",""+axeY);
             Log.d("vitesse Axe Z",""+axeZ);
-            if(axeX>1 || axeY>1 || axeZ>1){
+            if(axeX>4 || axeY>4 || axeZ>4){
                 playSoundAlert();
             }
         }
-        if (event.sensor == sensorManager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR)) {
+        if (event.sensor == sensorManager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR) && !(event.sensor == sensorManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION))) {
             if(isFirstTime && loaded){
                 playSound();
                 isFirstTime = false;
