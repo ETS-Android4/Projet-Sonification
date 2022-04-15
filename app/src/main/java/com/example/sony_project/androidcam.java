@@ -134,7 +134,7 @@ public class androidcam extends AppCompatActivity implements SensorEventListener
         float maxVolumeIndex  = (float) audioManager.getStreamMaxVolume(streamType);
 
         // Volume (0 --> 1)
-        this.volumeAlert = currentVolumeIndex / maxVolumeIndex;
+        this.volumeAlert = (currentVolumeIndex / maxVolumeIndex)*(2f/3);
 
         this.volume = 0;
 
@@ -190,10 +190,7 @@ public class androidcam extends AppCompatActivity implements SensorEventListener
         int height = 480 ;
 
         if(jpegSizes != null && jpegSizes.length > 0 ) {
-            width = jpegSizes[0].getWidth();
-            height = jpegSizes[0].getHeight();
             for (Size j : jpegSizes) {
-                Log.d("size",""+j);
                 width = j.getWidth();
                 height = j.getHeight();
             }
@@ -461,9 +458,7 @@ public class androidcam extends AppCompatActivity implements SensorEventListener
         if(loaded)  {
             float leftVolume = volume;
             float rightVolume = volume;
-            Log.d("play sound","----------------------------------------------------------");
             // Play sound. Returns the ID of the new stream.
-
             do {
                 streamId = this.soundPool.play(this.soundId,leftVolume, rightVolume, 1, -1, 1f);
             } while(streamId==0);
@@ -474,7 +469,6 @@ public class androidcam extends AppCompatActivity implements SensorEventListener
         if(loaded)  {
             float leftVolume = volumeAlert;
             float rightVolume = volumeAlert;
-            Log.d("play sound","----------------------------------------------------------");
             // Play sound. Returns the ID of the new stream.
             streamIdAlert = this.soundPool.play(this.soundIdAlert,leftVolume, rightVolume, 0, 0, 1f);
         }
@@ -491,9 +485,6 @@ public class androidcam extends AppCompatActivity implements SensorEventListener
             axeY = Math.abs(Math.round(event.values[1]));
             axeZ = Math.abs(Math.round(event.values[2]));
 
-            Log.d("vitesse Axe X",""+axeX);
-            Log.d("vitesse Axe Y",""+axeY);
-            Log.d("vitesse Axe Z",""+axeZ);
             if(axeX>4 || axeY>4 || axeZ>4){
                 playSoundAlert();
             }
@@ -521,7 +512,6 @@ public class androidcam extends AppCompatActivity implements SensorEventListener
                 this.volume = (float) Math.abs(Math.sin(pitch));
             }
 
-            Log.d("orientation",""+this.volume);
             soundPool.setVolume(streamId, this.volume, this.volume);
         }
 
