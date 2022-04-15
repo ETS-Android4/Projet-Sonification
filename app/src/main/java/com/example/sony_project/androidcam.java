@@ -24,19 +24,19 @@ import android.media.AudioManager;
 import android.media.Image;
 import android.media.ImageReader;
 import android.media.SoundPool;
+import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
-import android.util.Log;
 import android.util.Size;
 import android.view.Surface;
 import android.view.TextureView;
 import android.widget.Button;
 import android.widget.Toast;
+
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -134,7 +134,7 @@ public class androidcam extends AppCompatActivity implements SensorEventListener
         float maxVolumeIndex  = (float) audioManager.getStreamMaxVolume(streamType);
 
         // Volume (0 --> 1)
-        this.volumeAlert = (currentVolumeIndex / maxVolumeIndex)*(2f/3);
+        this.volumeAlert = (currentVolumeIndex / maxVolumeIndex)*(1/2f);
 
         this.volume = 0;
 
