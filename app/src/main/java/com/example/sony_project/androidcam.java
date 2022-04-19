@@ -31,6 +31,7 @@ import android.os.HandlerThread;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.util.Size;
 import android.view.Surface;
 import android.view.TextureView;
@@ -53,17 +54,21 @@ public class androidcam extends AppCompatActivity implements SensorEventListener
 
     private SoundPool soundPool;
     // Maximum sound stream.
-    private static final int MAX_STREAMS = 2;
+    private static final int MAX_STREAMS = 4;
     // Stream type.
     private static final int streamType = AudioManager.STREAM_MUSIC;
     private boolean loaded;
     private boolean isFirstTime;
+    private boolean validation = true;
     private float volume;
     private float volumeAlert;
+    private float volumeValidation;
     private int soundId;
     private int soundIdAlert;
+    private int soundIdValidation;
     private int streamId = -1;
     private int streamIdAlert = -1;
+    private int streamIdValidation = -1;
 
     //Sensor
     private SensorManager sensorManager;
@@ -159,7 +164,7 @@ public class androidcam extends AppCompatActivity implements SensorEventListener
 
         this.soundId = this.soundPool.load(this, R.raw.stringsound,1);
         this.soundIdAlert = this.soundPool.load(this, R.raw.bip_alerte_flou_image,1);
-
+        this.soundIdValidation = this.soundPool.load(this, R.raw.bip_alerte_validation_position,1);
         //------------------------------------------------------------------
     }
 
@@ -472,6 +477,15 @@ public class androidcam extends AppCompatActivity implements SensorEventListener
         }
     }
 
+    public void playSoundValidation( )  {
+        if(loaded)  {
+            float leftVolume = volumeValidation;
+            float rightVolume = volumeValidation;
+            // Play sound. Returns the ID of the new stream.
+            streamIdValidation = this.soundPool.play(this.soundIdValidation,leftVolume, rightVolume, 0, 0, 1f);
+        }
+    }
+
 
     public void onSensorChanged(SensorEvent event) {
         float axeX = 0;
@@ -509,6 +523,17 @@ public class androidcam extends AppCompatActivity implements SensorEventListener
             if(axeX==0 && axeY==0 && axeZ==0){
                 this.volume = (float) Math.abs(Math.sin(pitch));
             }
+            if(this.volume <= 0.01){
+                if(validation){
+                    //playSoundValidation();
+                    Log.i("validation", "-----------------"+this.volume);
+                    validation = false;
+                }
+            }
+            else{
+                validation = true;
+            }
+
 
             soundPool.setVolume(streamId, this.volume, this.volume);
         }
