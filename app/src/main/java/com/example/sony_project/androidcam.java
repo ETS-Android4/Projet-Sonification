@@ -190,10 +190,8 @@ public class androidcam extends AppCompatActivity implements SensorEventListener
         int height = 480 ;
 
         if(jpegSizes != null && jpegSizes.length > 0 ) {
-            for (Size j : jpegSizes) {
-                width = j.getWidth();
-                height = j.getHeight();
-            }
+            width = jpegSizes[0].getWidth();
+            height = jpegSizes[0].getHeight();
         }
 
         file = new File(Environment.getExternalStorageDirectory()+"/Pictures/"+UUID.randomUUID()+".JPEG");
@@ -379,7 +377,7 @@ public class androidcam extends AppCompatActivity implements SensorEventListener
     @Override
     protected void onResume() {
         super.onResume();
-
+        this.soundPool.resume(this.soundId);
         startBackgroundthread();
         if(textureView.isAvailable())
             openCamera();
