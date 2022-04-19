@@ -4,13 +4,14 @@
                                              xmlns:app="http://schemas.android.com/apk/res-auto"
                                              android:layout_width="match_parent"
                                              android:layout_height="match_parent"
-                                             android:background="@drawable/medium_sonificationcloud"
+                                             android:background="@drawable/fondbis"
                                              tools:context=".MainActivity">
 
     <ImageView
         android:id="@+id/play"
-        android:layout_width="50dp"
-        android:layout_height="50dp"
+        android:layout_width="0dp"
+        android:layout_height="60dp"
+        android:contentDescription="@string/todo"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.498"
