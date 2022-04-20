@@ -31,7 +31,6 @@ import android.os.HandlerThread;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
 import android.util.Size;
 import android.view.Surface;
 import android.view.TextureView;
@@ -50,41 +49,66 @@ import java.util.UUID;
 
 public class androidcam extends AppCompatActivity implements SensorEventListener{
 
+    // Component of the layout that contain the camera preview
     private TextureView textureView;
 
+
+    // -------- SOUND --------
+    // Sound manager
     private SoundPool soundPool;
+
     // Maximum sound stream.
-    private static final int MAX_STREAMS = 4;
-    // Stream type.
+    private static final int MAX_STREAMS = 3;
+
+    // Stream type
     private static final int streamType = AudioManager.STREAM_MUSIC;
+
+    // Sound loaded or not
     private boolean loaded;
+
+    // Is the first time that the sound of the position is played
     private boolean isFirstTime;
+
+    // Is the first time that the validation sound is played after reaching the right position
     private boolean validation = true;
+
+    // Volume of the different sound stream
     private float volume;
     private float volumeAlert;
     private float volumeValidation;
+
+    // Id of the different sound
     private int soundId;
     private int soundIdAlert;
     private int soundIdValidation;
+
+    // Id of the different sound stream
     private int streamId = -1;
     private int streamIdAlert = -1;
     private int streamIdValidation = -1;
 
-    //Sensor
+
+    // -------- SENSOR --------
     private SensorManager sensorManager;
 
+
+    // -------- CAMERA --------
     private CameraDevice cameraDevice;
     private CameraCaptureSession cameraCaptureSessions;
     private CaptureRequest.Builder captureRequestBuilder;
+    private Handler mBackgroundHandler;
+    private HandlerThread mBackgroundThread;
+
+    // Size of the preview
     private Size imageDimension;
 
     // Save to file
-
     private File file;
+
+    // Value of the camera permission
     private static final int Request_Camera_Permission = 200 ;
-    //private boolean mFlashSupported;
-    private Handler mBackgroundHandler;
-    private HandlerThread mBackgroundThread;
+
+
 
     CameraDevice.StateCallback stateCallBack = new CameraDevice.StateCallback() {
         @Override
@@ -117,34 +141,41 @@ public class androidcam extends AppCompatActivity implements SensorEventListener
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        // Setting the layout content
         setContentView(R.layout.activity_androidcam);
 
+        // Lock the screen orientation to portrait
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+
+        // Link the textureView with the layout textureView
         textureView = findViewById(R.id.textureView);
         assert textureView != null ;
         textureView.setSurfaceTextureListener(textureListener);
 
+        // Setting a button to take picture
         Button btnCapture = findViewById(R.id.btnCapture);
         btnCapture.setOnClickListener(view -> takePicture());
 
-        //------------------------------------------------------------------
 
+        // -------- SOUND --------
         // AudioManager audio settings for adjusting the volume
         AudioManager audioManager = (AudioManager) getSystemService(AUDIO_SERVICE);
 
-        // Current volume Index of particular stream type.
+        // Current volume Index of the STREAM_MUSIC stream type
         float currentVolumeIndex = (float) audioManager.getStreamVolume(streamType);
 
-        // Get the maximum volume index for a particular stream type.
+        // Get the maximum volume index for the STREAM_MUSIC stream type
         float maxVolumeIndex  = (float) audioManager.getStreamMaxVolume(streamType);
 
-        // Volume (0 --> 1)
+        // Volume (0 --> 1) and divide by 2 because alert sounds are easy to hear
         this.volumeAlert = (currentVolumeIndex / maxVolumeIndex)*(1/2f);
+        this.volumeValidation = (currentVolumeIndex / maxVolumeIndex)*(1/2f);
 
+        // Initializing the sound for the sonification of the position
         this.volume = 0;
 
-        // Suggests an audio stream whose volume should be changed by
-        // the hardware volume controls.
+        // Suggests an audio stream whose volume should be changed by the hardware volume controls
         this.setVolumeControlStream(streamType);
 
         AudioAttributes audioAttrib = new AudioAttributes.Builder()
@@ -157,15 +188,13 @@ public class androidcam extends AppCompatActivity implements SensorEventListener
 
         this.soundPool = builder.build();
 
-        // When Sound Pool load complete.
+        // When Sound Pool load complete
         this.soundPool.setOnLoadCompleteListener((soundPool, sampleId, status) -> loaded = true);
 
-        // Load sound file into SoundPool.
-
+        // Load sound files into SoundPool
         this.soundId = this.soundPool.load(this, R.raw.stringsound,1);
         this.soundIdAlert = this.soundPool.load(this, R.raw.bip_alerte_flou_image,1);
         this.soundIdValidation = this.soundPool.load(this, R.raw.bip_alerte_validation_position,1);
-        //------------------------------------------------------------------
     }
 
 
@@ -180,6 +209,7 @@ public class androidcam extends AppCompatActivity implements SensorEventListener
     private void takePicture() {
         if(cameraDevice == null)
             return;
+        // Capture the camera in JPEG Format
         CameraManager manager = (CameraManager)getSystemService(Context.CAMERA_SERVICE);
         try{ CameraCharacteristics characteristics = manager.getCameraCharacteristics(cameraDevice.getId());
                 Size[] jpegSizes = null;
@@ -188,17 +218,15 @@ public class androidcam extends AppCompatActivity implements SensorEventListener
                     .getOutputSizes(ImageFormat.JPEG);
         }
 
-
-            // Capture image with custom size
-
+        // Capture image with custom size
         int width = 640 ;
         int height = 480 ;
-
         if(jpegSizes != null && jpegSizes.length > 0 ) {
             width = jpegSizes[0].getWidth();
             height = jpegSizes[0].getHeight();
         }
 
+        // Where files will be save with their dimensions
         file = new File(Environment.getExternalStorageDirectory()+"/Pictures/"+UUID.randomUUID()+".JPEG");
 
         ImageReader reader = ImageReader.newInstance(width,height,ImageFormat.JPEG,1);
@@ -215,6 +243,8 @@ public class androidcam extends AppCompatActivity implements SensorEventListener
         catch(IOException e){
             e.printStackTrace();
         }
+
+        // An image is available
         ImageReader.OnImageAvailableListener readerListener = new ImageReader.OnImageAvailableListener() {
             @Override
             public void onImageAvailable(ImageReader imageReader) {
@@ -241,6 +271,8 @@ public class androidcam extends AppCompatActivity implements SensorEventListener
               }
             }
             };
+
+        // Overview of the camera
         reader.setOnImageAvailableListener(readerListener,mBackgroundHandler);
         CameraCaptureSession.CaptureCallback captureListener = new CameraCaptureSession.CaptureCallback() {
             @Override
@@ -272,10 +304,13 @@ public class androidcam extends AppCompatActivity implements SensorEventListener
         }
     }
 
+    // Create a real time preview of the picture
     private void createCameraPreview() {
         try {
             SurfaceTexture texture = textureView.getSurfaceTexture();
             assert texture != null;
+
+            // set the dimension of the camera preview
             texture.setDefaultBufferSize(imageDimension.getWidth(), imageDimension.getHeight());
             Surface surface = new Surface(texture);
             captureRequestBuilder = cameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW);
@@ -300,7 +335,7 @@ public class androidcam extends AppCompatActivity implements SensorEventListener
         }
 
         }
-
+    // Update the camera preview
     private void UpdatePreview() {
         if (cameraDevice == null)
             Toast.makeText(this, "Error", Toast.LENGTH_SHORT).show();
@@ -313,12 +348,14 @@ public class androidcam extends AppCompatActivity implements SensorEventListener
 
     }
 
-
+    // Initialize the camera
     private void openCamera() {
 
         CameraManager manager = (CameraManager) getSystemService(Context.CAMERA_SERVICE);
         try{
             String cameraID = manager.getCameraIdList()[0];
+
+            // Get camera characteristics
             CameraCharacteristics characteristics = manager.getCameraCharacteristics(cameraID);
             StreamConfigurationMap map;
             if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
@@ -329,6 +366,7 @@ public class androidcam extends AppCompatActivity implements SensorEventListener
             }
             assert map != null;
             imageDimension = map.getOutputSizes(SurfaceTexture.class)[0];
+
             // Check SelfPermission
             if (ActivityCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED)
             {
@@ -367,7 +405,7 @@ public class androidcam extends AppCompatActivity implements SensorEventListener
         }
     };
 
-
+    // Check the permission request results
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         if(requestCode == Request_Camera_Permission){
@@ -411,6 +449,7 @@ public class androidcam extends AppCompatActivity implements SensorEventListener
 
     }
 
+    // Method with thread that end the camera background
     private void stopBackgroundthread() {
         mBackgroundThread.quitSafely();
         try{
@@ -422,6 +461,7 @@ public class androidcam extends AppCompatActivity implements SensorEventListener
         }
     }
 
+    // Method with thread that start the camera background
     private void startBackgroundthread() {
         mBackgroundThread = new HandlerThread("Camera Background");
         mBackgroundThread.start();
@@ -456,33 +496,45 @@ public class androidcam extends AppCompatActivity implements SensorEventListener
 
 
 
-    // When users click on the button
+    // Play sound of the position
     public void playSound()  {
+        // Play if the sound is loaded
         if(loaded)  {
             float leftVolume = volume;
             float rightVolume = volume;
-            // Play sound. Returns the ID of the new stream.
+            // While sound has not played
             do {
+                // Play sound. Returns the ID of the new stream.
                 streamId = this.soundPool.play(this.soundId,leftVolume, rightVolume, 1, -1, 1f);
             } while(streamId==0);
         }
     }
 
+    // Play sound of the flou alert
     public void playSoundAlert( )  {
+        // Play if the sound is loaded
         if(loaded)  {
             float leftVolume = volumeAlert;
             float rightVolume = volumeAlert;
-            // Play sound. Returns the ID of the new stream.
-            streamIdAlert = this.soundPool.play(this.soundIdAlert,leftVolume, rightVolume, 0, 0, 1f);
+            // While sound has not played
+            do {
+                // Play sound. Returns the ID of the new stream.
+                streamIdAlert = this.soundPool.play(this.soundIdAlert,leftVolume, rightVolume, 0, 0, 1f);
+            } while(streamIdAlert==0);
         }
     }
 
+    // Play sound of the validation alert
     public void playSoundValidation( )  {
+        // Play if the sound is loaded
         if(loaded)  {
             float leftVolume = volumeValidation;
             float rightVolume = volumeValidation;
-            // Play sound. Returns the ID of the new stream.
-            streamIdValidation = this.soundPool.play(this.soundIdValidation,leftVolume, rightVolume, 0, 0, 1f);
+            // While sound has not played
+            do {
+                // Play sound. Returns the ID of the new stream.
+                streamIdValidation = this.soundPool.play(this.soundIdValidation,leftVolume, rightVolume, 0, 0, 1f);
+            } while(streamIdValidation==0);
         }
     }
 
@@ -493,48 +545,58 @@ public class androidcam extends AppCompatActivity implements SensorEventListener
         float axeZ = 0;
         if (event.sensor == sensorManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION) && !(event.sensor == sensorManager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR))) {
 
+            // Get acceleration for each axis
             axeX = Math.abs(Math.round(event.values[0]));
             axeY = Math.abs(Math.round(event.values[1]));
             axeZ = Math.abs(Math.round(event.values[2]));
 
+            // If acceleration of one axis greater than a certain level -> Play alert
             if(axeX>4 || axeY>4 || axeZ>4){
                 playSoundAlert();
             }
         }
         if (event.sensor == sensorManager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR) && !(event.sensor == sensorManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION))) {
+            // If sound is loaded and it is the first time that this sound is played -> Play sound position
             if(isFirstTime && loaded){
                 playSound();
                 isFirstTime = false;
             }
+
             // Get rotation matrix
             float[] rotationMatrix = new float[16];
             SensorManager.getRotationMatrixFromVector(rotationMatrix, event.values);
 
             // Remap coordinate system
             float[] remappedRotationMatrix = new float[16];
-            SensorManager.remapCoordinateSystem(rotationMatrix, SensorManager.AXIS_X-(int) axeX, SensorManager.AXIS_Z-(int) axeZ,
-                    remappedRotationMatrix);
+            SensorManager.remapCoordinateSystem(rotationMatrix, SensorManager.AXIS_X-(int) axeX, SensorManager.AXIS_Z-(int) axeZ, remappedRotationMatrix);
 
             // Convert to orientations
             float[] orientation = new float[3];
             SensorManager.getOrientation(remappedRotationMatrix, orientation);
 
+            // Transform the orientation from an angle between 0 - 2pi to 0 - 4pi
             float pitch = Math.abs(orientation[2])*2;
+
+            // If not in acceleration -> change volume
             if(axeX==0 && axeY==0 && axeZ==0){
+                // Change volume corresponding to the sin of the angle
                 this.volume = (float) Math.abs(Math.sin(pitch));
             }
-            if(this.volume <= 0.01){
+
+            // If position is good (with a margin of 0.007)
+            if(this.volume <= 0.007){
+                // If the position just became good -> Play validation sound
                 if(validation){
-                    //playSoundValidation();
-                    Log.i("validation", "-----------------"+this.volume);
+                    playSoundValidation();
                     validation = false;
                 }
             }
-            else{
+            // If the position is far enough from a good position -> reinitialize the validation indicator
+            else if(this.volume >= 0.015){
                 validation = true;
             }
 
-
+            // Set the volume of the position sound with the volume calculated previously
             soundPool.setVolume(streamId, this.volume, this.volume);
         }
 
